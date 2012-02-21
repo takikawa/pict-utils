@@ -3,7 +3,9 @@
 (require slideshow/pict
          racket/draw
          (except-in unstable/gui/ppict grid)
-         (for-syntax syntax/parse))
+         (for-syntax syntax/parse)
+         (for-meta 2 syntax/parse)
+         (for-meta 2 racket/base))
 
 ;; grid : nat nat nat [nat] -> pict
 ;; draw a grid
@@ -46,16 +48,31 @@
 ;;       (arc 30 30 0 (degrees->radians 30))
 ;;       (close))
 (define-syntax (path stx)
-  (define-syntax-class path-elem
-    (pattern ((~literal move-to) x y)
-             #:with expr #'(λ (p) (send p move-to x y)))
-    (pattern ((~literal line-to) x y)
-             #:with expr #'(λ (p) (send p line-to x y)))
-    (pattern ((~literal arc) x y w h sr er)
-             #:with expr #'(λ (p) (send p arc x y w h sr er)))
-    (pattern ((~literal close))
-             #:with expr #'(λ (p) (send p close))))
-  
+  (define-syntax (define-path-elem stx)
+    (syntax-parse stx
+      [(_ class-name:id (method:id attr:id (arg:id ...)) ...)
+       #'(define-syntax-class class-name
+           (pattern ((~literal method) arg ...)
+                    #:with attr #'(λ (p) (send p id arg ...))) ...)]))
+
+  (define-path-elem path-elem
+    (append expr [path])
+    (arc expr [x y w h sr er])
+    (close expr [])
+    (curve-to expr [x1 y1 x2 y2 x3 y3])
+    (ellipse expr [x y w h])
+    (move-to expr [x y])
+    (line-to expr [x y])
+    (lines expr [points])
+    (rectangle expr [x y w h])
+    (reset expr [])
+    (reverse expr [])
+    (rotate expr [radians])
+    (rounded-rectangle expr [x y w h])
+    (scale expr [x y])
+    (text-outline expr [f s x y])
+    (translate expr [x y]))
+
   (syntax-parse stx
     [(_ elem:path-elem ...)
      #'(let ()
