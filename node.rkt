@@ -5,14 +5,16 @@
          (for-syntax racket syntax/parse))
 
 (provide nodes make-style
+         align
          (rename-out [make-coord coord]))
 
 ;;; Data definitions
 
 ;; a Location is one of
 ;;  - Symbol
-;;  - (cons Symbol Align)
+;;  - (align Symbol Symbol)
 ;;  - (coord Number Number [Symbol])
+(struct align (name align))
 (struct coord (x y align))
 
 (define (make-coord x y [align 'cc])
@@ -41,7 +43,7 @@
 ;;; Contracts
 (define align/c (one-of/c 'lt 'ct 'rt 'lc 'cc 'rc 'lb 'cb 'rb))
 
-(define location/c (or/c symbol? (cons/c symbol? align/c) coord?))
+(define location/c (or/c symbol? (struct/c align symbol? symbol?) coord?))
 
 (define style/c
   (struct/c style (or/c #f string?) (or/c #f string?) (or/c #f string?)))
@@ -90,7 +92,7 @@
     (define loc (node-loc n))
     (match loc
       [(? symbol?) (dict-ref name-mapping loc)]
-      [(cons (and (? symbol?) name) (and (? symbol?) align))
+      [(struct align ((and (? symbol?) name) (and (? symbol?) align)))
        (define c (dict-ref name-mapping name))
        (coord (coord-x c) (coord-y c) align)]
       [else loc]))

@@ -23,7 +23,7 @@
                #:pict (vline 1 300))
          (node #:at 'origin
                #:pict (circle 200))
-         (node #:at (cons 'origin 'lb)
+         (node #:at (align 'origin 'lb)
                #:pict
                (colorize
                 (path (move-to 0 0)
@@ -40,7 +40,7 @@
                #:pict
                (colorize (vline 1 (* 100 (tan (degrees->radians 30))))
                          "orange"))
-         (node #:at (cons 'origin 'lb)
+         (node #:at (align 'origin 'lb)
                #:pict (path (move-to 0 0)
                             (line-to 100 (* -100 (tan (degrees->radians 30))))))
          ;; draw trig text
