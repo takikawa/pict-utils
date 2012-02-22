@@ -82,8 +82,8 @@
          (elem.expr p) ...
          (define-values (x y w h)
            (send p get-bounding-box))
-         (dc (λ (dc x y)
-             (send dc draw-path p x y))
+         (dc (λ (dc dx dy)
+               (send dc draw-path p dx (+ dy h)))
            w h))]))
 
 ;; backdrop: pict [#:color color] -> pict
