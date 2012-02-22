@@ -14,15 +14,16 @@
               #:background-color "white"))
 
 (define main-diagram
-  (nodes (node #:at (coord 0 0)
+  (nodes (node #:name 'origin #:at (coord 0 0))
+         (node #:at 'origin
                #:pict (colorize (grid 300 300 50 1) "gray"))
-         (node #:at (coord 0 0)
+         (node #:at 'origin
                #:pict (hline 300 1))
-         (node #:at (coord 0 0)
+         (node #:at 'origin
                #:pict (vline 1 300))
-         (node #:at (coord 0 0)
+         (node #:at 'origin
                #:pict (circle 200))
-         (node #:at (coord 0 0 'lb)
+         (node #:at (cons 'origin 'lb)
                #:pict
                (colorize
                 (path (move-to 0 0)
@@ -39,7 +40,7 @@
                #:pict
                (colorize (vline 1 (* 100 (tan (degrees->radians 30))))
                          "orange"))
-         (node #:at (coord 0 0 'lb)
+         (node #:at (cons 'origin 'lb)
                #:pict (path (move-to 0 0)
                             (line-to 100 (* -100 (tan (degrees->radians 30))))))
          ;; draw trig text
