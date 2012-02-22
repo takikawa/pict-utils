@@ -28,7 +28,7 @@
              #:with val #'text-expr))
   
   (define-syntax-class node-clause
-    (pattern ((~datum node) #:at ((~literal coord) e1 e2)
+    (pattern ((~datum node) #:at ((~datum coord) e1 e2)
                             sub:node-subclause ...)
              #:with node #'(keyword-apply build-node
                                           '(sub.kw ...)
@@ -48,16 +48,31 @@
           [(node-text n) (text (node-text n))]
           [else base-node-pict]))
   ;; first figure out the size of the base pict
-  (define-values (w h)
-    (for/fold ([x-max 0] [y-max 0])
+  (define-values (xp xn yp yn)
+    (for/fold ([x-pos-max 0] [x-neg-max 0]
+               [y-pos-max 0] [y-neg-max 0])
               ([n nodes])
       ;; hack
       (define p (or (draw-one n) (blank 0 0)))
-      (values (max x-max (+ (node-x n) (pict-width p)))
-              (max y-max (+ (node-y n) (pict-height p))))))
+      (values (max x-pos-max (+ (node-x n) (/ (pict-width p) 2)))
+              (min x-neg-max (- (node-x n) (/ (pict-width p) 2)))
+              (max y-pos-max (+ (node-y n) (/ (pict-height p) 2)))
+              (min y-neg-max (- (node-y n) (/ (pict-height p) 2))))))
+  (define-values (w h) (values (+ xp (- xn)) (+ yp (- yn))))
+  ;; gets the translated coords for each node
+  (define (draw-coords n p)
+    (define pict-for-node (draw-one n))
+    (values (if (> (node-x n) 0)
+                (- (+ xn (node-x n)) (/ (pict-width p) 2))
+                (- (- (node-x n) xn) (/ (pict-width p) 2)))
+            (if (> (node-y n) 0)
+                (- (- yp (node-y n)) (/ (pict-height p) 2))
+                (- (+ yp (node-y n)) (/ (pict-height p) 2)))))
+  ;; then draw on a blank pict of the right size
   (for/fold ([p (blank w h)])
             ([n nodes])
     (define pict-for-node (draw-one n))
+    (define-values (x y) (draw-coords n pict-for-node))
     (if pict-for-node
-        (pin-over p (node-x n) (node-y n) pict-for-node)
+        (pin-over p x y pict-for-node)
         p)))
