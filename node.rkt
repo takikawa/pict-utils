@@ -23,15 +23,9 @@
 (define-syntax (nodes stx)
   
   (define-splicing-syntax-class node-subclause
-    (pattern (~seq #:pict pict-expr)
-             #:with kw #'#:pict
-             #:with val #'pict-expr)
-    (pattern (~seq #:style style-expr)
-             #:with kw #'#:style
-             #:with val #'style-expr)
-    (pattern (~seq #:text text-expr)
-             #:with kw #'#:text
-             #:with val #'text-expr))
+    (pattern (~seq (~and #:pict kw) (~and pict-expr val)))
+    (pattern (~seq (~and #:style kw) (~and style-expr val)))
+    (pattern (~seq (~and #:text kw) (~and text-expr val))))
   
   (define-syntax-class node-clause
     (pattern ((~datum node) #:at ((~datum coord) e1 e2)
