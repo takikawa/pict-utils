@@ -15,14 +15,13 @@
 
 (define main-diagram
   (nodes (node #:name 'origin #:at (coord 0 0))
-         (node #:at 'origin
-               #:pict (colorize (grid 300 300 50 1) "gray"))
-         (node #:at 'origin
-               #:pict (hline 300 1))
-         (node #:at 'origin
-               #:pict (vline 1 300))
-         (node #:at 'origin
-               #:pict (circle 200))
+         ;; grid and axes
+         (node #:at 'origin #:pict (colorize (grid 300 300 50 1) "gray"))
+         (node #:at 'origin #:pict (hline 300 1))
+         (node #:at 'origin #:pict (vline 1 300))
+         ;; unit circle
+         (node #:at 'origin #:pict (circle 200))
+         ;; the interesting stuff
          (node #:at (align 'origin 'lb)
                #:pict
                (colorize
