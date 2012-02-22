@@ -5,6 +5,9 @@
          "pict.rkt"
          "node.rkt")
 
+(define axis-label
+  (make-style #:background-color "white"))
+
 (define main-diagram
   (nodes (node #:at (coord 0 0)
                #:pict (colorize (grid 300 300 50 1) "gray"))
@@ -42,17 +45,10 @@
                #:pict
                (backdrop (colorize (text "sin α") "red")))
          ;; draw labels
-         (node #:at (coord -10 -100)
-               #:pict (backdrop (text "-1")))
-         (node #:at (coord -10 100)
-               #:pict (backdrop (text "1")))
-         (node #:at (coord 100 -10)
-               #:pict (backdrop (text "1")))
-         (node #:at (coord -100 -10)
-               #:pict (backdrop (text "-1")))
-         (node #:at (coord -10 -50)
-               #:pict (backdrop (text "-½")))
-         (node #:at (coord -10 50)
-               #:pict (backdrop (text "½")))
-         (node #:at (coord -50 -10)
-               #:pict (backdrop (text "-½")))))
+         (node #:at (coord -10 -100) #:style axis-label #:text "-1")
+         (node #:at (coord -10 100)  #:style axis-label #:text "1")
+         (node #:at (coord 100 -10)  #:style axis-label #:text "1")
+         (node #:at (coord -100 -10) #:style axis-label #:text "-1")
+         (node #:at (coord -10 -50)  #:style axis-label #:text "-½")
+         (node #:at (coord -10 50)   #:style axis-label #:text "½")
+         (node #:at (coord -50 -10)  #:style axis-label #:text "-½")))

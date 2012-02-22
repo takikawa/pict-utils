@@ -1,15 +1,18 @@
 #lang racket
 
 (require slideshow/pict
+         "pict.rkt"
          (for-syntax syntax/parse))
 
-(provide nodes)
+(provide nodes make-style)
 
 ;; a Style is a (style String ...) [to be expanded]
-(struct style (color))
+(struct style (color text-color background-color))
 
-(define (make-style #:color [color #f])
-  (style color))
+(define (make-style #:color [color #f]
+                    #:text-color [text-color #f]
+                    #:background-color [background-color #f])
+  (style color text-color background-color))
 
 ;; a Node is a (node Coord Coord Pict String Style)
 (struct node (x y pos pict text style))
@@ -46,11 +49,18 @@
   
   ;; to build a pict for each node
   (define (draw-one n)
+    (define sty (or (node-style n) (style #f #f #f)))
     (define base-node-pict (node-pict n))
-    (cond [(and (node-text n) base-node-pict)
-           (cc-superimpose (text (node-text n)) base-node-pict)]
-          [(node-text n) (text (node-text n))]
-          [else base-node-pict]))
+    (define pict-with-text
+      (cond [(and (node-text n) base-node-pict)
+             (cc-superimpose (text (node-text n)) base-node-pict)]
+            [(node-text n) (text (node-text n))]
+            [else base-node-pict]))
+    (define pict-with-backdrop
+      (if (style-background-color sty)
+          (backdrop pict-with-text #:color (style-background-color sty))
+          pict-with-text))
+    pict-with-backdrop)
   
   ;; pict-offsets : pict? pos? -> (values int? int?)
   ;; find the offsets used to draw or size the scene
