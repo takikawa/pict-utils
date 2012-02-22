@@ -1,7 +1,6 @@
 #lang racket
 
 (require slideshow/pict
-         (except-in unstable/gui/ppict grid)
          "pict.rkt"
          "node.rkt")
 

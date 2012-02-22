@@ -2,73 +2,123 @@
 
 (require slideshow/pict
          "pict.rkt"
-         (for-syntax syntax/parse))
+         (for-syntax racket syntax/parse))
 
-(provide nodes make-style)
+(provide nodes make-style
+         (rename-out [make-coord coord]))
 
-;; a Style is a (style String ...) [to be expanded]
+;;; Data definitions
+
+;; a Location is one of
+;;  - Symbol
+;;  - (cons Symbol Align)
+;;  - (coord Number Number [Symbol])
+(struct coord (x y align))
+
+(define (make-coord x y [align 'cc])
+  (coord x y align))
+
+;; a Style is a (style Maybe<String> String Maybe<String>)
 (struct style (color text-color background-color))
 
 (define (make-style #:color [color #f]
-                    #:text-color [text-color #f]
+                    #:text-color [text-color "black"]
                     #:background-color [background-color #f])
   (style color text-color background-color))
 
-;; a Node is a (node Coord Coord Pict String Style)
-(struct node (x y pos pict text style))
+;; a Node is a (node Location 
+;;                   Maybe<Symbol> Maybe<Pict>
+;;                   Maybe<String> Maybe<Style>)
+(struct node (loc name pict text style))
 
-(define (make-node x y pos
+(define (make-node #:at [loc (coord 0 0 'cc)]
+                   #:name [name #f]
                    #:pict [pict #f]
                    #:style [style #f]
                    #:text [text #f])
-  (node x y pos pict text style))
+  (node loc name pict text style))
 
+;;; Contracts
+(define align/c (one-of/c 'lt 'ct 'rt 'lc 'cc 'rc 'lb 'cb 'rb))
+
+(define location/c (or/c symbol? (cons/c symbol? align/c) coord?))
+
+(define style/c
+  (struct/c style (or/c #f string?) (or/c #f string?) (or/c #f string?)))
+
+(define node/c
+  (struct/c node location/c 
+            (or/c #f symbol?) (or/c #f pict?)
+            (or/c #f string?) (or/c #f style/c)))
+
+;;; Macros
 (define-syntax (nodes stx)
   
   (define-splicing-syntax-class node-subclause
+    (pattern (~seq (~and #:at kw) (~and loc-expr val)))
+    (pattern (~seq (~and #:name kw) (~and name-expr val)))
     (pattern (~seq (~and #:pict kw) (~and pict-expr val)))
     (pattern (~seq (~and #:style kw) (~and style-expr val)))
     (pattern (~seq (~and #:text kw) (~and text-expr val))))
   
   (define-syntax-class node-clause
-    (pattern ((~datum node) #:at c:coord sub:node-subclause ...)
-             #:with node #'(keyword-apply make-node
-                                          '(sub.kw ...)
-                                          (list sub.val ...)
-                                          (list c.e1 c.e2 c.pos))))
-  
-  (define-syntax-class coord
-    (pattern ((~datum coord) e1 e2 (~optional pos #:defaults ([pos #''cc])))))
+    (pattern ((~datum node) sub:node-subclause ...)
+             #:with node
+             #`(make-node #,@(flatten (map list ; interleave kws and vals
+                                           (syntax->list #'(sub.kw ...))
+                                           (syntax->list #'(sub.val ...)))))))
   
   (syntax-parse stx
     [(_ n:node-clause ...)
      #'(draw-nodes (list n.node ...))]))
 
 ;; listof<Node> -> Pict
-(define (draw-nodes nodes)
+(define/contract (draw-nodes nodes)
+  (-> (listof node/c) pict?)
+  
+  ;; build a dict mapping node names to coordinates
+  (define name-mapping
+    (for/hash ([n nodes]
+               #:when (node-name n))
+      (when (not (coord? (node-loc n)))
+        (error "Node can't have a named location while being named~n"))
+      (values (node-name n) (node-loc n))))
+  
+  ;; -> coord?
+  ;; given a node, extract its coordinates (or consult name table)
+  (define (get-coord n)
+    (define loc (node-loc n))
+    (match loc
+      [(? symbol?) (dict-ref name-mapping loc)]
+      [(cons (? symbol?) (and (? symbol?) align))
+       (define c1 (dict-ref name-mapping loc))
+       (coord (coord-x c1) (coord-y c1) align)]
+      [else loc]))
   
   ;; to build a pict for each node
   (define (draw-one n)
     (define sty (or (node-style n) (style #f #f #f)))
-    (define base-node-pict (node-pict n))
+    ;; get the base pict for this node, or start with blank
+    (define base-node-pict (or (node-pict n) (blank 0 0)))
     ;; build a text pict
-    (define text-pict (and (node-text n) (text (node-text n))))
+    (define text-pict (text (or (node-text n) "")))
     ;; color the text if necessary
     (define colored-text
-      (and text-pict
-           (style-text-color sty)
-           (colorize text-pict (style-text-color sty))))
+      (if (style-text-color sty)
+          (colorize text-pict (style-text-color sty))
+          text-pict))
+    ;; stick the text (if present) on the base pict
     (define pict-with-text
       (cond [(and colored-text base-node-pict)
              (cc-superimpose colored-text base-node-pict)]
             [colored-text colored-text]
             [else base-node-pict]))
+    ;; if a background color is needed, add a backdrop
     (define pict-with-backdrop
-      (if (and pict-with-text (style-background-color sty))
+      (if (style-background-color sty)
           (backdrop pict-with-text #:color (style-background-color sty))
           pict-with-text))
-    ;; if there's nothing, just draw nothing
-    (or pict-with-backdrop (blank 0 0)))
+    pict-with-backdrop)
   
   ;; pict-offsets : pict? pos? -> (values int? int?)
   ;; find the offsets used to draw or size the scene
@@ -92,23 +142,29 @@
                [y-pos-max 0] [y-neg-max 0])
               ([n nodes])
       (define p (draw-one n))
-      (define-values (dx dy) (pict-offsets p (node-pos n)))
-      (values (max x-pos-max (+ (node-x n) dx))
-              (min x-neg-max (- (node-x n) dx))
-              (max y-pos-max (+ (node-y n) dy))
-              (min y-neg-max (- (node-y n) dy)))))
+      (define c (get-coord n))
+      (define x (coord-x c))
+      (define y (coord-y c))
+      (define-values (dx dy) (pict-offsets p (coord-align c)))
+      (values (max x-pos-max (+ x dx))
+              (min x-neg-max (- x dx))
+              (max y-pos-max (+ y dy))
+              (min y-neg-max (- y dy)))))
   
   (define-values (w h) (values (+ xp (- xn)) (+ yp (- yn))))
   
   ;; gets the translated coords for each node
   (define (draw-coords n p)
-    (define-values (dx dy) (pict-offsets p (node-pos n)))
-    (values (if (> (node-x n) 0)
-                (- (+ (- xn) (node-x n)) dx)
-                (- (- (- xn) (- (node-x n))) dx))
-            (if (> (node-y n) 0)
-                (- (- yp (node-y n)) dy)
-                (- (+ yp (- (node-y n))) dy))))
+    (define c (get-coord n))
+    (define x (coord-x c))
+    (define y (coord-y c))
+    (define-values (dx dy) (pict-offsets p (coord-align c)))
+    (values (if (> x 0)
+                (- (+ (- xn) x) dx)
+                (- (- (- xn) (- x)) dx))
+            (if (> y 0)
+                (- (- yp y) dy)
+                (- (+ yp (- y)) dy))))
   
   ;; then draw on a blank pict of the right size
   (for/fold ([p (blank w h)])
