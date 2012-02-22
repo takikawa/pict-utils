@@ -5,6 +5,12 @@
 
 (provide nodes)
 
+;; a Style is a (style String ...) [to be expanded]
+(struct style (color))
+
+(define (make-style #:color [color #f])
+  (style color))
+
 ;; a Node is a (node Coord Coord Pict String Style)
 (struct node (x y pict text style))
 
@@ -63,11 +69,11 @@
   (define (draw-coords n p)
     (define pict-for-node (draw-one n))
     (values (if (> (node-x n) 0)
-                (- (+ xn (node-x n)) (/ (pict-width p) 2))
-                (- (- (node-x n) xn) (/ (pict-width p) 2)))
+                (- (+ (- xn) (node-x n)) (/ (pict-width p) 2))
+                (- (- (- xn) (- (node-x n))) (/ (pict-width p) 2)))
             (if (> (node-y n) 0)
                 (- (- yp (node-y n)) (/ (pict-height p) 2))
-                (- (+ yp (node-y n)) (/ (pict-height p) 2)))))
+                (- (+ yp (- (node-y n))) (/ (pict-height p) 2)))))
   ;; then draw on a blank pict of the right size
   (for/fold ([p (blank w h)])
             ([n nodes])
