@@ -51,16 +51,24 @@
   (define (draw-one n)
     (define sty (or (node-style n) (style #f #f #f)))
     (define base-node-pict (node-pict n))
+    ;; build a text pict
+    (define text-pict (and (node-text n) (text (node-text n))))
+    ;; color the text if necessary
+    (define colored-text
+      (and text-pict
+           (style-text-color sty)
+           (colorize text-pict (style-text-color sty))))
     (define pict-with-text
-      (cond [(and (node-text n) base-node-pict)
-             (cc-superimpose (text (node-text n)) base-node-pict)]
-            [(node-text n) (text (node-text n))]
+      (cond [(and colored-text base-node-pict)
+             (cc-superimpose colored-text base-node-pict)]
+            [colored-text colored-text]
             [else base-node-pict]))
     (define pict-with-backdrop
-      (if (style-background-color sty)
+      (if (and pict-with-text (style-background-color sty))
           (backdrop pict-with-text #:color (style-background-color sty))
           pict-with-text))
-    pict-with-backdrop)
+    ;; if there's nothing, just draw nothing
+    (or pict-with-backdrop (blank 0 0)))
   
   ;; pict-offsets : pict? pos? -> (values int? int?)
   ;; find the offsets used to draw or size the scene
@@ -83,8 +91,7 @@
     (for/fold ([x-pos-max 0] [x-neg-max 0]
                [y-pos-max 0] [y-neg-max 0])
               ([n nodes])
-      ;; hack
-      (define p (or (draw-one n) (blank 0 0)))
+      (define p (draw-one n))
       (define-values (dx dy) (pict-offsets p (node-pos n)))
       (values (max x-pos-max (+ (node-x n) dx))
               (min x-neg-max (- (node-x n) dx))

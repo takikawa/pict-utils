@@ -7,6 +7,12 @@
 
 (define axis-label
   (make-style #:background-color "white"))
+(define sin-style
+  (make-style #:text-color "red"
+              #:background-color "white"))
+(define cos-style
+  (make-style #:text-color "blue"
+              #:background-color "white"))
 
 (define main-diagram
   (nodes (node #:at (coord 0 0)
@@ -38,12 +44,8 @@
                #:pict (path (move-to 0 0)
                             (line-to 100 (* -100 (tan (degrees->radians 30))))))
          ;; draw trig text
-         (node #:at (coord 50 -10)
-               #:pict
-               (backdrop (colorize (text "cos α") "blue")))
-         (node #:at (coord 65 20)
-               #:pict
-               (backdrop (colorize (text "sin α") "red")))
+         (node #:at (coord 50 -10) #:style cos-style #:text "cos α")
+         (node #:at (coord 65 20) #:style sin-style #:text "sin α")
          ;; draw labels
          (node #:at (coord -10 -100) #:style axis-label #:text "-1")
          (node #:at (coord -10 100)  #:style axis-label #:text "1")
