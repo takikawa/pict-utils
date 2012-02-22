@@ -90,9 +90,9 @@
     (define loc (node-loc n))
     (match loc
       [(? symbol?) (dict-ref name-mapping loc)]
-      [(cons (? symbol?) (and (? symbol?) align))
-       (define c1 (dict-ref name-mapping loc))
-       (coord (coord-x c1) (coord-y c1) align)]
+      [(cons (and (? symbol?) name) (and (? symbol?) align))
+       (define c (dict-ref name-mapping name))
+       (coord (coord-x c) (coord-y c) align)]
       [else loc]))
   
   ;; to build a pict for each node
