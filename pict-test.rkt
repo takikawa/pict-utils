@@ -53,3 +53,9 @@
          (node #:at (coord -10 -50)  #:style axis-label #:text "-½")
          (node #:at (coord -10 50)   #:style axis-label #:text "½")
          (node #:at (coord -50 -10)  #:style axis-label #:text "-½")))
+
+;; you can also compose picts made with `nodes`
+(define composed-diagram
+  (nodes
+    (node #:at (coord 0 200) #:pict (standard-fish 20 20))
+    (node #:at (coord 200 200) #:pict main-diagram)))
