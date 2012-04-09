@@ -64,7 +64,6 @@
   (define month-length (dict-ref days-in-a-month month))
   (define last-offset (modulo (- 7 (modulo (+ month-length start-day) 7)) 7))
   (define num-weeks (quotient (+ month-length start-day last-offset) 7))
-  (printf "day: ~a length: ~a offset: ~a weeks: ~a ~n" start-day month-length last-offset num-weeks)
   ;; produce the pict
   (define-values (weeks _)
     (for/fold ([weeks '()]
