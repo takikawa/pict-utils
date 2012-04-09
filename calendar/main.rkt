@@ -19,7 +19,7 @@
 (define (zeller* day month year)
   (modulo (- (zeller day month year) 1) 7))
 
-(module+ tests
+(module+ test
   (check-equal? (zeller 03 12 1988) 0)
   (check-equal? (zeller 24 03 2012) 0)
   (check-equal? (zeller 25 03 2012) 1))
