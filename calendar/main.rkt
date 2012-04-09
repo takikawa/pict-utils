@@ -2,6 +2,8 @@
 
 (require slideshow/pict)
 
+(provide calendar)
+
 ;; Zeller's congruence
 (define (zeller day month year)
   (define Y (if (<= month 2) (- year 1) year))
