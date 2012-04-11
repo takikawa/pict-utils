@@ -30,22 +30,41 @@
   (check-equal? (zeller 24 03 2012) 0)
   (check-equal? (zeller 25 03 2012) 1))
 
-(define days-in-a-month
+(define *days-in-a-month*
   #hash((01 . 31) (02 . 28) (03 . 31)
         (04 . 30) (05 . 31) (06 . 30)
         (07 . 31) (08 . 31) (09 . 30)
         (10 . 31) (11 . 30) (12 . 31)))
+
+;; check if it's a leap year
+(define (leap-year? year)
+  (and (zero? (modulo year 4))
+       (or (not (zero? (modulo year 100)))
+           (zero? (modulo year 400)))))
+
+(module+ test
+  (check-false (leap-year? 2100))
+  (check-false (leap-year? 1700))
+  (check-true (leap-year? 1600))
+  (check-true (leap-year? 2400))
+  (check-true (leap-year? 2012)))
+
+;; the number of days in a given month
+(define (month-length month year)
+  (if (and (= 2 month) (leap-year? year))
+      29
+      (dict-ref *days-in-a-month* month)))
 
 ;; calendar : (integer-in 1 12) integer
 ;;            #:draw-day (-> (U #f (integer-in 1 31)) pict?)
 ;;            -> pict?
 (define (calendar month year
                   #:draw-day [draw-day draw-day])
-  
+
   ;; draw-week : (integer-in 1 31) #:offset (integer-in -6 6) -> pict?
   ;; creates a pict for a week of the month
   (define (draw-week start-day #:offset [offset 0])
-    (if (>= offset 0) 
+    (if (>= offset 0)
         (apply hc-append
                (append (build-list offset (λ (n) (draw-day #f)))
                        (map (λ (n) (draw-day n))
@@ -54,7 +73,7 @@
                (append (map (λ (n) (draw-day n))
                             (range start-day (+ start-day (+ 7 offset))))
                        (build-list (- offset) (λ (n) (draw-day #f)))))))
-  
+
   ;; optional header
   (define header
     (apply hc-append
@@ -63,9 +82,9 @@
 
   ;; some numbers we need
   (define start-day (zeller* 1 month year))
-  (define month-length (dict-ref days-in-a-month month))
-  (define last-offset (modulo (- 7 (modulo (+ month-length start-day) 7)) 7))
-  (define num-weeks (quotient (+ month-length start-day last-offset) 7))
+  (define month-len (month-length month year))
+  (define last-offset (modulo (- 7 (modulo (+ month-len start-day) 7)) 7))
+  (define num-weeks (quotient (+ month-len start-day last-offset) 7))
   ;; produce the pict
   (define-values (weeks _)
     (for/fold ([weeks '()]
@@ -76,7 +95,7 @@
   (apply vc-append
          (append (list (draw-week 1 #:offset start-day))
                  weeks
-                 (list (draw-week (- month-length (- 6 last-offset))
+                 (list (draw-week (- month-len (- 6 last-offset))
                                   #:offset (- last-offset))))))
 
 ;; base day
