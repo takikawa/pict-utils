@@ -1,6 +1,7 @@
-#lang racket
+#lang at-exp racket
 
 (require slideshow/pict
+         "paragraph.rkt"
          "pict.rkt"
          "node.rkt")
 
@@ -57,5 +58,11 @@
 ;; you can also compose picts made with `nodes`
 (define composed-diagram
   (nodes
-    (node #:at (coord 0 200) #:pict (standard-fish 20 20))
-    (node #:at (coord 200 200) #:pict main-diagram)))
+    (node #:at (coord 250 200) #:pict
+          (backdrop
+           (paragraph @string-append{The angle α is 30 degrees in
+                                     the example. The sine of α,
+                                     which is the height of the
+                                     red line, is 1/2.}
+                      100)))
+    (node #:at (coord 0 200) #:pict main-diagram)))
