@@ -144,14 +144,16 @@
                [y-pos-max 0] [y-neg-max 0])
               ([n nodes])
       (define p (draw-one n))
+      (define w (pict-width p))
+      (define h (pict-height p))
       (define c (get-coord n))
       (define x (coord-x c))
       (define y (coord-y c))
       (define-values (dx dy) (pict-offsets p (coord-align c)))
       (values (max x-pos-max (+ x dx))
-              (min x-neg-max (- x dx))
+              (min x-neg-max (- x (- w dx)))
               (max y-pos-max (+ y dy))
-              (min y-neg-max (- y dy)))))
+              (min y-neg-max (- y (- h dy))))))
   
   (define-values (w h) (values (+ xp (- xn)) (+ yp (- yn))))
   

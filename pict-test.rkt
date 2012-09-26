@@ -66,3 +66,9 @@
                                      red line, is 1/2.}
                       100)))
     (node #:at (coord 0 200) #:pict main-diagram)))
+
+;; this pict should not be drawn out of bounds
+(define coord-test
+  (nodes
+    (node #:at (coord 0 15 'cb)  #:pict (rectangle 20 20))
+    (node #:at (coord 0 -15 'ct) #:pict (rectangle 20 20))))
