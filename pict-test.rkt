@@ -6,16 +6,16 @@
          "node.rkt")
 
 (define axis-label
-  (make-style #:background-color "white"))
+  (style #:background-color "white"))
 (define sin-style
-  (make-style #:text-color "red"
-              #:background-color "white"))
+  (style #:text-color "red"
+         #:background-color "white"))
 (define cos-style
-  (make-style #:text-color "blue"
-              #:background-color "white"))
+  (style #:text-color "blue"
+         #:background-color "white"))
 
 (define main-diagram
-  (nodes (node #:name 'origin #:at (coord 0 0))
+  (npict (node #:name 'origin #:at (coord 0 0))
          ;; grid and axes
          (node #:at 'origin #:pict (colorize (grid 300 300 50 1) "gray"))
          (node #:at 'origin #:pict (hline 300 1))
@@ -57,18 +57,18 @@
 
 ;; you can also compose picts made with `nodes`
 (define composed-diagram
-  (nodes
-    (node #:at (coord 250 200) #:pict
-          (backdrop
-           (paragraph @string-append{The angle α is 30 degrees in
-                                     the example. The sine of α,
-                                     which is the height of the
-                                     red line, is 1/2.}
-                      100)))
-    (node #:at (coord 0 200) #:pict main-diagram)))
+  (npict
+   (node #:at (coord 250 200) #:pict
+         (backdrop
+          (paragraph @string-append{The angle α is 30 degrees in
+                                    the example. The sine of α,
+                                    which is the height of the
+                                    red line, is 1/2.}
+                     100)))
+   (node #:at (coord 0 200) #:pict main-diagram)))
 
 ;; this pict should not be drawn out of bounds
 (define coord-test
-  (nodes
-    (node #:at (coord 0 15 'cb)  #:pict (rectangle 20 20))
-    (node #:at (coord 0 -15 'ct) #:pict (rectangle 20 20))))
+  (npict
+   (node #:at (coord 0 15 'cb)  #:pict (rectangle 20 20))
+   (node #:at (coord 0 -15 'ct) #:pict (rectangle 20 20))))

@@ -1,12 +1,15 @@
 #lang racket
 
-(require slideshow/pict
-         "pict.rkt"
-         (for-syntax racket syntax/parse))
+;; Library for high-level pict construction
 
-(provide nodes make-style
+(require slideshow/pict
+         "pict.rkt")
+
+(provide npict
          align
-         (rename-out [make-coord coord]))
+         (rename-out [make-coord coord]
+                     [make-node node]
+                     [make-style style]))
 
 ;;; Data definitions
 
@@ -20,7 +23,7 @@
 (define (make-coord x y [align 'cc])
   (coord x y align))
 
-;; a Style is a (style Maybe<String> String Maybe<String>)
+;; a Style is a (make-style Maybe<String> String Maybe<String>)
 (struct style (color text-color background-color))
 
 (define (make-style #:color [color #f]
@@ -28,9 +31,9 @@
                     #:background-color [background-color #f])
   (style color text-color background-color))
 
-;; a Node is a (node Location 
-;;                   Maybe<Symbol> Maybe<Pict>
-;;                   Maybe<String> Maybe<Style>)
+;; a Node is a (make-node Location 
+;;                        Maybe<Symbol> Maybe<Pict>
+;;                        Maybe<String> Maybe<Style>)
 (struct node (loc name pict text style))
 
 (define (make-node #:at [loc (coord 0 0 'cc)]
@@ -53,30 +56,8 @@
             (or/c #f symbol?) (or/c #f pict?)
             (or/c #f string?) (or/c #f style/c)))
 
-;;; Macros
-(define-syntax (nodes stx)
-  
-  (define-splicing-syntax-class node-subclause
-    (pattern (~seq (~and #:at kw) (~and loc-expr val)))
-    (pattern (~seq (~and #:name kw) (~and name-expr val)))
-    (pattern (~seq (~and #:pict kw) (~and pict-expr val)))
-    (pattern (~seq (~and #:style kw) (~and style-expr val)))
-    (pattern (~seq (~and #:text kw) (~and text-expr val))))
-  
-  (define-syntax-class node-clause
-    (pattern ((~datum node) sub:node-subclause ...)
-             #:with node
-             #`(make-node #,@(flatten (map list ; interleave kws and vals
-                                           (syntax->list #'(sub.kw ...))
-                                           (syntax->list #'(sub.val ...)))))))
-  
-  (syntax-parse stx
-    [(_ n:node-clause ...)
-     #'(draw-nodes (list n.node ...))]))
-
 ;; listof<Node> -> Pict
-(define/contract (draw-nodes nodes)
-  (-> (listof node/c) pict?)
+(define (npict . nodes)
   
   ;; build a dict mapping node names to coordinates
   (define name-mapping
