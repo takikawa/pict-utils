@@ -5,11 +5,28 @@
 (require slideshow/pict
          "pict.rkt")
 
-(provide npict
-         align
-         (rename-out [make-coord coord]
-                     [make-node node]
-                     [make-style style]))
+(provide
+ (contract-out
+  [npict (->* () #:rest (listof node/c) pict?)]
+  [align (-> symbol? symbol? align?)]
+  (rename make-coord coord
+          (->* (real? real?)
+               (align/c)
+               coord?))
+  (rename make-node node
+          (->* ()
+               (#:at location/c
+                #:name symbol?
+                #:pict pict?
+                #:style style/c
+                #:text string?)
+               node?))
+  (rename make-style style
+          (->* ()
+               (#:color string?
+                #:text-color string?
+                #:background-color string?)
+               style?))))
 
 ;;; Data definitions
 
