@@ -72,3 +72,19 @@
   (npict
    (node #:at (coord 0 15 'cb)  #:pict (rectangle 20 20))
    (node #:at (coord 0 -15 'ct) #:pict (rectangle 20 20))))
+
+;; testing lines
+(define line-test
+  (npict
+   ;; two boxes, arrow line from left to right
+   (node #:name 'n1 #:at (coord -20 0)
+         #:pict (rectangle 20 20))
+   (node #:name 'n2 #:at (coord 20 0)
+         #:pict (rectangle 20 20))
+   (line #:arrow? #t #:from 'n1 #:to 'n2)
+   ;; two boxes, non-arrow line between
+   (node #:name 'n3 #:at (coord -20 -25)
+         #:pict (rectangle 20 20))
+   (node #:name 'n4 #:at (coord 20 -25)
+         #:pict (rectangle 20 20))
+   (line #:from 'n4 #:to 'n3)))

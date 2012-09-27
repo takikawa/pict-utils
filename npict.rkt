@@ -7,7 +7,8 @@
 
 (provide
  (contract-out
-  [npict (->* () #:rest (listof node/c) pict?)]
+  [npict (->* () #:rest (listof (or/c line? node/c))
+              pict?)]
   [align (-> symbol? symbol? align?)]
   (rename make-coord coord
           (->* (real? real?)
@@ -21,6 +22,11 @@
                 #:style style/c
                 #:text string?)
                node?))
+  (rename make-line line
+          (->* (#:from symbol?
+                #:to symbol?)
+               (#:arrow? any/c)
+               line?))
   (rename make-style style
           (->* ()
                (#:color string?
@@ -60,6 +66,14 @@
                    #:text [text #f])
   (node loc name pict text style))
 
+;; Line - for drawing between nodes
+(struct line (from to arrow?))
+
+(define (make-line #:from from
+                   #:to to
+                   #:arrow? [arrow? #f])
+  (line from to arrow?))
+
 ;;; Contracts
 (define align/c (one-of/c 'lt 'ct 'rt 'lc 'cc 'rc 'lb 'cb 'rb))
 
@@ -74,7 +88,11 @@
             (or/c #f string?) (or/c #f style/c)))
 
 ;; listof<Node> -> Pict
-(define (npict . nodes)
+(define (npict . clauses)
+  
+  ;; sort into nodes, lines, and so on
+  (define nodes (filter node? clauses))
+  (define lines (filter line? clauses))
   
   ;; build a dict mapping node names to coordinates
   (define name-mapping
@@ -119,6 +137,16 @@
           (backdrop pict-with-text #:color (style-background-color sty))
           pict-with-text))
     pict-with-backdrop)
+  
+  ;; the picts that we'll draw on the final picture
+  (define picts (map draw-one nodes))
+  
+  ;; mapping of node names to picts
+  (define pict-mapping
+    (for/hash ([n nodes]
+               [p picts]
+               #:when (node-name n))
+      (values (node-name n) p)))
   
   ;; pict-offsets : pict? pos? -> (values int? int?)
   ;; find the offsets used to draw or size the scene
@@ -169,10 +197,34 @@
                 (- (+ yp (- y)) dy))))
   
   ;; then draw on a blank pict of the right size
-  (for/fold ([p (blank w h)])
-            ([n nodes])
-    (define pict-for-node (draw-one n))
-    (define-values (x y) (draw-coords n pict-for-node))
-    (if pict-for-node
-        (pin-over p x y pict-for-node)
-        p)))
+  (define initial-pict
+    (for/fold ([p (blank w h)])
+              ([pict-for-node picts] [n nodes])
+      (define-values (x y) (draw-coords n pict-for-node))
+      (if pict-for-node
+          (pin-over p x y pict-for-node)
+          p)))
+  
+  ;; then draw the arrows on the image
+  (define pict-with-arrows
+    (for/fold ([pict initial-pict])
+              ([line lines])
+      (define from-name (line-from line))
+      (define to-name (line-to line))
+      (define arrow? (line-arrow? line))
+      (if arrow?
+          (pin-arrow-line 5
+                          pict
+                          (hash-ref pict-mapping from-name)
+                          cc-find
+                          (hash-ref pict-mapping to-name)
+                          cc-find)
+          (pin-line pict
+                    (hash-ref pict-mapping from-name)
+                    cc-find
+                    (hash-ref pict-mapping to-name)
+                    cc-find))))
+  
+  ;; final image
+  pict-with-arrows)
+      
