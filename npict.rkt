@@ -25,7 +25,13 @@
   (rename make-line line
           (->* (#:from node-name/c
                 #:to node-name/c)
-               (#:arrow? any/c)
+               (#:arrow? any/c #:start-angle real? #:end-angle real?
+                #:start-pull real? #:end-pull real? #:line-width real?
+                #:color string? #:under? any/c
+                #:style (or/c 'transparent 'solid 'xor 'hilite
+                              'dot 'long-dash 'short-dash 'dot-dash
+                              'xor-dot 'xor-long-dash 'xor-short-dash
+                              'xor-dot-dash))
                line?))
   (rename make-style style
           (->* ()
@@ -72,12 +78,29 @@
   (node loc name pict text style))
 
 ;; Line - for drawing between nodes
-(struct line (from to arrow?))
+(struct line (from to arrow?
+              start-align end-align
+              start-angle end-angle
+              start-pull end-pull
+              line-width color style under?))
 
 (define (make-line #:from from
                    #:to to
-                   #:arrow? [arrow? #f])
-  (line from to arrow?))
+                   #:arrow? [arrow? #f]
+                   #:start-angle [start-angle #f]
+                   #:end-angle [end-angle #f]
+                   #:start-align [start-align 'cc]
+                   #:end-align [end-align 'cc]
+                   #:start-pull [start-pull 1/4]
+                   #:end-pull [end-pull 1/4]
+                   #:line-width [line-width #f]
+                   #:color [color #f]
+                   #:style [style 'solid]
+                   #:under? [under? #f]
+                   #:solid? [solid? #t])
+  (line from to arrow? start-align end-align start-angle
+        end-angle start-pull end-pull line-width color style
+        under?))
 
 ;;; Contracts
 (define align/c 
@@ -108,6 +131,12 @@
       (when (not (coord? (node-loc n)))
         (error "Nodes can't have both a named location and a name"))
       (values (node-name n) (node-loc n))))
+  
+  ;; a map for finders, for use with arrows and lines
+  (define finder-mapping
+    (hash 'lt lt-find 'ct ct-find 'rt rt-find
+          'lc lc-find 'cc cc-find 'rc rc-find
+          'lb lb-find 'cb cb-find 'rb rb-find))
   
   ;; -> coord?
   ;; given a node, extract its coordinates (or consult name table)
@@ -215,22 +244,30 @@
   ;; then draw the arrows on the image
   (define pict-with-arrows
     (for/fold ([pict initial-pict])
-              ([line lines])
-      (define from-name (line-from line))
-      (define to-name (line-to line))
-      (define arrow? (line-arrow? line))
-      (if arrow?
-          (pin-arrow-line 5
-                          pict
-                          (hash-ref pict-mapping from-name)
-                          cc-find
-                          (hash-ref pict-mapping to-name)
-                          cc-find)
-          (pin-line pict
-                    (hash-ref pict-mapping from-name)
-                    cc-find
-                    (hash-ref pict-mapping to-name)
-                    cc-find))))
+              ([current-line lines])
+      (match-define
+        (struct line 
+          (from-name to-name arrow?
+           start-align end-align
+           start-angle end-angle
+           start-pull end-pull
+           line-width color style under?))
+        current-line)
+      (define line-function 
+        (if arrow? pin-arrow-line pin-line))
+      (define from-pict (hash-ref pict-mapping from-name))
+      (define to-pict (hash-ref pict-mapping to-name))
+      (define from-find (hash-ref finder-mapping start-align))
+      (define to-find (hash-ref finder-mapping end-align))
+      (keyword-apply 
+       line-function
+       '(#:color #:end-angle #:end-pull #:line-width
+         #:start-angle #:start-pull #:style #:under?)
+       (list color end-angle end-pull line-width
+             start-angle start-pull style under?)
+       (if arrow?
+           (list 5 pict from-pict from-find to-pict to-find)
+           (list pict from-pict from-find to-pict to-find)))))
   
   ;; final image
   pict-with-arrows)

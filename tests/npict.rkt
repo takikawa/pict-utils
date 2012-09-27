@@ -89,6 +89,28 @@
          #:pict (rectangle 20 20))
    (line #:from 'n4 #:to 'n3)))
 
+;; advanced line tests with curves
+(define line-test-2
+  (npict
+   ;; two boxes, curved line from left to right (dashed)
+   (node #:name 'n1 #:at (coord -20 0)
+         #:pict (rectangle 20 20))
+   (node #:name 'n2 #:at (coord 20 0)
+         #:pict (rectangle 20 20))
+   (line #:arrow? #t #:from 'n1 #:to 'n2
+         #:start-angle (/ pi 3)
+         #:end-angle (- (/ pi 3))
+         #:style 'short-dash)
+   ;; two boxes, curved line mirror image (translucent)
+   (node #:name 'n3 #:at (coord -20 -25)
+         #:pict (rectangle 20 20))
+   (node #:name 'n4 #:at (coord 20 -25)
+         #:pict (rectangle 20 20))
+   (line #:arrow? #t #:from 'n3 #:to 'n4
+         #:start-angle (- (/ pi 3))
+         #:end-angle (/ pi 3)
+         #:style 'hilite)))
+
 ;; allow both strings and symbols as names
 ;; should show a diagonally placed pair of a
 ;; red box and black box with a line between
