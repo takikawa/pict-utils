@@ -1,9 +1,9 @@
 #lang at-exp racket
 
 (require slideshow/pict
-         "paragraph.rkt"
-         "pict.rkt"
-         "node.rkt")
+         "../paragraph.rkt"
+         "../pict.rkt"
+         "../npict.rkt")
 
 (define axis-label
   (style #:background-color "white"))
