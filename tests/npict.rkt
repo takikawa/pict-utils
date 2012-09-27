@@ -88,3 +88,15 @@
    (node #:name 'n4 #:at (coord 20 -25)
          #:pict (rectangle 20 20))
    (line #:from 'n4 #:to 'n3)))
+
+;; allow both strings and symbols as names
+;; should show a diagonally placed pair of a
+;; red box and black box with a line between
+(define name-test
+  (npict
+   (node #:name "origin" #:at (coord 0 0))
+   (node #:name 'n1 #:at (coord 50 50)
+         #:pict (rectangle 20 20))
+   (node #:at "origin"
+         #:pict (colorize (rectangle 20 20) "red"))
+   (line #:from 'n1 #:to "origin")))

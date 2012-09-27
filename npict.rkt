@@ -17,14 +17,14 @@
   (rename make-node node
           (->* ()
                (#:at location/c
-                #:name symbol?
+                #:name node-name/c
                 #:pict pict?
                 #:style style/c
                 #:text string?)
                node?))
   (rename make-line line
-          (->* (#:from symbol?
-                #:to symbol?)
+          (->* (#:from node-name/c
+                #:to node-name/c)
                (#:arrow? any/c)
                line?))
   (rename make-style style
@@ -36,9 +36,14 @@
 
 ;;; Data definitions
 
-;; a Location is one of
+;; a NodeName is one of
 ;;  - Symbol
-;;  - (align Symbol Symbol)
+;;  - String
+(define node-name/c (or/c string? symbol?))
+
+;; a Location is one of
+;;  - NodeName
+;;  - (align NodeName Symbol)
 ;;  - (coord Number Number [Symbol])
 (struct align (name align))
 (struct coord (x y align))
@@ -75,16 +80,18 @@
   (line from to arrow?))
 
 ;;; Contracts
-(define align/c (one-of/c 'lt 'ct 'rt 'lc 'cc 'rc 'lb 'cb 'rb))
+(define align/c 
+  (one-of/c 'lt 'ct 'rt 'lc 'cc 'rc 'lb 'cb 'rb))
 
-(define location/c (or/c symbol? (struct/c align symbol? symbol?) coord?))
+(define location/c 
+  (or/c node-name/c (struct/c align symbol? symbol?) coord?))
 
 (define style/c
   (struct/c style (or/c #f string?) (or/c #f string?) (or/c #f string?)))
 
 (define node/c
   (struct/c node location/c 
-            (or/c #f symbol?) (or/c #f pict?)
+            (or/c #f node-name/c) (or/c #f pict?)
             (or/c #f string?) (or/c #f style/c)))
 
 ;; listof<Node> -> Pict
@@ -99,7 +106,7 @@
     (for/hash ([n nodes]
                #:when (node-name n))
       (when (not (coord? (node-loc n)))
-        (error "Node can't have a named location while being named~n"))
+        (error "Nodes can't have both a named location and a name"))
       (values (node-name n) (node-loc n))))
   
   ;; -> coord?
@@ -107,7 +114,7 @@
   (define (get-coord n)
     (define loc (node-loc n))
     (match loc
-      [(? symbol?) (dict-ref name-mapping loc)]
+      [(? node-name/c) (dict-ref name-mapping loc)]
       [(struct align ((and (? symbol?) name) (and (? symbol?) align)))
        (define c (dict-ref name-mapping name))
        (coord (coord-x c) (coord-y c) align)]
