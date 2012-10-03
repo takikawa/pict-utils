@@ -23,9 +23,10 @@
                 #:text string?)
                node?))
   (rename make-line line
-          (->* (#:from node-name/c
-                #:to node-name/c)
+          (->* (#:from (or/c node-name/c pict?)
+                #:to (or/c node-name/c pict?))
                (#:arrow? any/c #:start-angle real? #:end-angle real?
+                #:start-align align/c #:end-align align/c
                 #:start-pull real? #:end-pull real? #:line-width real?
                 #:color string? #:under? any/c
                 #:style (or/c 'transparent 'solid 'xor 'hilite
@@ -249,7 +250,7 @@
               ([current-line lines])
       (match-define
         (struct line 
-          (from-name to-name arrow?
+          (from to arrow?
            start-align end-align
            start-angle end-angle
            start-pull end-pull
@@ -257,8 +258,14 @@
         current-line)
       (define line-function 
         (if arrow? pin-arrow-line pin-line))
-      (define from-pict (hash-ref pict-mapping from-name))
-      (define to-pict (hash-ref pict-mapping to-name))
+      (define from-pict
+        (if (pict? from)
+            from
+            (hash-ref pict-mapping from)))
+      (define to-pict
+        (if (pict? to)
+            to
+            (hash-ref pict-mapping to)))
       (define from-find (hash-ref finder-mapping start-align))
       (define to-find (hash-ref finder-mapping end-align))
       (keyword-apply 
