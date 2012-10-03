@@ -163,9 +163,8 @@
           text-pict))
     ;; stick the text (if present) on the base pict
     (define pict-with-text
-      (cond [(and colored-text base-node-pict)
+      (cond [(and (node-text n) base-node-pict)
              (cc-superimpose colored-text base-node-pict)]
-            [colored-text colored-text]
             [else base-node-pict]))
     ;; if a background color is needed, add a backdrop
     (define pict-with-backdrop
@@ -190,15 +189,15 @@
     (define w (pict-width p))
     (define h (pict-height p))
     (case pos
-      [(lt) (values 0 0)]
-      [(ct) (values (/ w 2) 0)]
-      [(rt) (values w 0)]
+      [(lt) (values 0 h)]
+      [(ct) (values (/ w 2) h)]
+      [(rt) (values w h)]
       [(lc) (values 0 (/ h 2))]
       [(cc) (values (/ w 2) (/ h 2))]
       [(rc) (values w (/ h 2))]
-      [(lb) (values 0 h)]
-      [(cb) (values (/ w 2) h)]
-      [(rb) (values w h)]))
+      [(lb) (values 0 0)]
+      [(cb) (values (/ w 2) 0)]
+      [(rb) (values w 0)]))
   
   ;; first figure out the size of the base pict
   (define-values (xp xn yp yn)
@@ -212,16 +211,19 @@
       (define x (coord-x c))
       (define y (coord-y c))
       (define-values (dx dy) (pict-offsets p (coord-align c)))
-      (values (max x-pos-max (+ x dx))
-              (min x-neg-max (- x (- w dx)))
-              (max y-pos-max (+ y dy))
-              (min y-neg-max (- y (- h dy))))))
+      (values (max x-pos-max (+ x (- w dx)))
+              (min x-neg-max (- x dx))
+              (max y-pos-max (+ y (- h dy)))
+              (min y-neg-max (- y dy)))))
   
   (define-values (w h) (values (+ xp (- xn)) (+ yp (- yn))))
   
   ;; gets the translated coords for each node
+  ;; TODO: simplify this calculation
   (define (draw-coords n p)
     (define c (get-coord n))
+    (define w (pict-width p))
+    (define h (pict-height p))
     (define x (coord-x c))
     (define y (coord-y c))
     (define-values (dx dy) (pict-offsets p (coord-align c)))
@@ -229,8 +231,8 @@
                 (- (+ (- xn) x) dx)
                 (- (- (- xn) (- x)) dx))
             (if (> y 0)
-                (- (- yp y) dy)
-                (- (+ yp (- y)) dy))))
+                (- (- yp y) (- h dy))
+                (- (+ yp (- y)) (- h dy)))))
   
   ;; then draw on a blank pict of the right size
   (define initial-pict

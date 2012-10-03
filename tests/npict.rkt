@@ -73,6 +73,12 @@
    (node #:at (coord 0 15 'cb)  #:pict (rectangle 20 20))
    (node #:at (coord 0 -15 'ct) #:pict (rectangle 20 20))))
 
+;; same with this one
+(define coord-test-2
+  (npict
+   (node #:at (coord 15 0 'lc)  #:pict (rectangle 20 20))
+   (node #:at (coord -15 0 'rc) #:pict (rectangle 20 20))))
+
 ;; testing lines
 (define line-test
   (npict
@@ -122,3 +128,29 @@
    (node #:at "origin"
          #:pict (colorize (rectangle 20 20) "red"))
    (line #:from 'n1 #:to "origin")))
+
+;; tests alignment specifications
+(define align-test
+  (let ([c (colorize (rectangle 20 20) "red")]
+        [l (colorize (rectangle 20 20) "green")]
+        [r (colorize (rectangle 20 20) "blue")]
+        [hl (colorize (hline 180 1) "lightgray")]
+        [vl (colorize (vline 1 180) "lightgray")])
+    (npict
+     ;; grid lines
+     (node #:at (coord 0 -30 'cb) #:pict vl)
+     (node #:at (coord 60 -30 'cb) #:pict vl)
+     (node #:at (coord 120 -30 'cb) #:pict vl)
+     (node #:at (coord -30 0 'lc) #:pict hl)
+     (node #:at (coord -30 60 'lc) #:pict hl)
+     (node #:at (coord -30 120 'lc) #:pict hl)
+     ;; boxes at all alignments
+     (node #:at (coord 0 0 'cc) #:pict c #:text "cc")
+     (node #:at (coord 60 0 'ct) #:pict c #:text "ct")
+     (node #:at (coord 120 0 'cb) #:pict c #:text "cb")
+     (node #:at (coord 0 60 'lc) #:pict l #:text "lc")
+     (node #:at (coord 60 60 'lt) #:pict l #:text "lt")
+     (node #:at (coord 120 60 'lb) #:pict l #:text "lb")
+     (node #:at (coord 0 120 'rc) #:pict r #:text "rc")
+     (node #:at (coord 60 120 'rt) #:pict r #:text "rt")
+     (node #:at (coord 120 120 'rb) #:pict r #:text "rb"))))
