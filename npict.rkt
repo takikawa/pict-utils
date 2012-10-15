@@ -28,7 +28,7 @@
                (#:arrow? any/c #:start-angle real? #:end-angle real?
                 #:start-align align/c #:end-align align/c
                 #:start-pull real? #:end-pull real? #:line-width real?
-                #:color string? #:under? any/c
+                #:color string? #:under? any/c #:solid? any/c
                 #:style (or/c 'transparent 'solid 'xor 'hilite
                               'dot 'long-dash 'short-dash 'dot-dash
                               'xor-dot 'xor-long-dash 'xor-short-dash
@@ -83,7 +83,8 @@
               start-align end-align
               start-angle end-angle
               start-pull end-pull
-              line-width color style under?))
+              line-width color style under?
+              solid?))
 
 (define (make-line #:from from
                    #:to to
@@ -101,7 +102,7 @@
                    #:solid? [solid? #t])
   (line from to arrow? start-align end-align start-angle
         end-angle start-pull end-pull line-width color style
-        under?))
+        under? solid?))
 
 ;;; Contracts
 (define align/c 
@@ -254,7 +255,8 @@
            start-align end-align
            start-angle end-angle
            start-pull end-pull
-           line-width color style under?))
+           line-width color style under?
+           solid?))
         current-line)
       (define line-function 
         (if arrow? pin-arrow-line pin-line))
@@ -270,12 +272,16 @@
       (define to-find (hash-ref finder-mapping end-align))
       (keyword-apply 
        line-function
-       '(#:color #:end-angle #:end-pull #:line-width
+       `(#:color #:end-angle #:end-pull #:line-width
+         ,@(if arrow? '(#:solid?) '())
          #:start-angle #:start-pull #:style #:under?)
-       (list color end-angle end-pull line-width
-             start-angle start-pull style under?)
+       `(,color ,end-angle ,end-pull ,line-width
+         ,@(if arrow? (list solid?) '())
+         ,start-angle ,start-pull ,style ,under?)
        (if arrow?
-           (list 5 pict from-pict from-find to-pict to-find)
+           ;; TODO: arrow size is kinda hacky
+           (list (if (number? arrow?) arrow? 5)
+                 pict from-pict from-find to-pict to-find)
            (list pict from-pict from-find to-pict to-find)))))
   
   ;; final image
