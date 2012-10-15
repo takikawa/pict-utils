@@ -87,9 +87,13 @@
         (define-values (x y w h)
           (send p get-bounding-box))
         (dc (λ (dc dx dy)
+              (define old-pen (send dc get-pen))
+              (define old-brush (send dc get-brush))
               (?? (send dc set-pen ?pen) (void))
               (?? (send dc set-brush ?brush) (void))
-              (send dc draw-path p dx (+ dy h)))
+              (send dc draw-path p dx (+ dy h))
+              (send dc set-pen old-pen)
+              (send dc set-brush old-brush))
             w h)))]))
 
 ;; backdrop: pict [#:color color] -> pict
