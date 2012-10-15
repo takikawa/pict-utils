@@ -3,7 +3,8 @@
 (require slideshow/pict
          racket/draw
          (except-in unstable/gui/ppict grid)
-         (for-syntax syntax/parse)
+         (for-syntax syntax/parse
+                     syntax/parse/experimental/template)
          (for-meta 2 syntax/parse)
          (for-meta 2 racket/base))
 
@@ -76,15 +77,20 @@
     (translate expr [x y]))
 
   (syntax-parse stx
-    [(_ elem:path-elem ...)
-     #'(let ()
-         (define p (new dc-path%))
-         (elem.expr p) ...
-         (define-values (x y w h)
-           (send p get-bounding-box))
-         (dc (λ (dc dx dy)
-               (send dc draw-path p dx (+ dy h)))
-           w h))]))
+    [(_ (~optional (~seq #:brush ?brush:expr))
+        (~optional (~seq #:pen ?pen:expr))
+        ?elem:path-elem ...)
+     (template
+      (let ()
+        (define p (new dc-path%))
+        (?elem.expr p) ...
+        (define-values (x y w h)
+          (send p get-bounding-box))
+        (dc (λ (dc dx dy)
+              (?? (send dc set-pen ?pen) (void))
+              (?? (send dc set-brush ?brush) (void))
+              (send dc draw-path p dx (+ dy h)))
+            w h)))]))
 
 ;; backdrop: pict [#:color color] -> pict
 (define (backdrop pict #:color [color "white"])
