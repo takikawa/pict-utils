@@ -1,17 +1,33 @@
-#lang racket
+#lang racket/base
+
+;; An assortment of pict constructors
 
 (require slideshow/pict
+         racket/class
+         racket/contract
          racket/draw
          (except-in unstable/gui/ppict grid)
-         (for-syntax syntax/parse
+         unstable/gui/pict
+         (for-syntax racket/base
+                     syntax/parse
                      syntax/parse/experimental/template)
          (for-meta 2 syntax/parse)
          (for-meta 2 racket/base))
 
-(provide grid arc path degrees->radians backdrop)
+(provide
+  path
+  (contract-out [envelope (->* (real? real?)
+                               (#:border-width real?
+                                #:color string?
+                                #:border-color string?
+                                #:seal-color string?)
+                               pict?)]
+                [grid (->* (real? real? real?)
+                           (real?)
+                           pict?)]
+                [arc (-> real? real? real? real? pict?)]))
 
-;; grid : nat nat nat [nat] -> pict
-;; draw a grid
+;; grid : draw a grid
 (define (grid width height step [line-width 1])
   (define vlines
     (apply hc-append
@@ -28,8 +44,7 @@
   vlines
   (cc-superimpose vlines hlines))
 
-;; arc : nat nat real real -> pict
-;; draw an arc pict
+;; arc : draw an arc pict
 (define (arc width height start-radians end-radians)
   (dc (λ (dc x y)
         (send dc draw-arc
@@ -39,9 +54,36 @@
       width
       height))
 
-;; degrees->radians : real -> real
-(define (degrees->radians r)
-  (* r (/ (* 2 pi) 360)))
+;; an envelope pict
+(define (envelope width height
+                  #:border-width [border-width 1]
+                  #:color [color "beige"]
+                  #:border-color [border-color "medium goldenrod"]
+                  #:seal-color [seal-color "red"])
+  (define body
+    (rectangle/border width height
+                      #:color color
+                      #:border-color border-color
+                      #:border-width border-width))
+  (define flap
+    (path #:brush (new brush% [color color])
+          #:pen (new pen%
+                     [width border-width]
+                     [color border-color])
+          (move-to 0 (- (/ height 2)))
+          (line-to width (- (/ height 2)))
+          (line-to (/ width 2) 0)
+          (close)))
+  (define seal 
+    (circle/border 
+     (* width 0.15)
+     #:color seal-color
+     #:border-color seal-color
+     #:border-width border-width))
+  (cc-superimpose (ct-superimpose
+                   body
+                   flap)
+                  seal))
 
 ;; path
 ;; pict macro for drawing paths
@@ -95,10 +137,3 @@
               (send dc set-pen old-pen)
               (send dc set-brush old-brush))
             w h)))]))
-
-;; backdrop: pict [#:color color] -> pict
-(define (backdrop pict #:color [color "white"])
-  (cc-superimpose (colorize (filled-rectangle (pict-width pict)
-                                              (pict-height pict))
-                            color)
-                  pict))
