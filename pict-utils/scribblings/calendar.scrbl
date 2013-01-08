@@ -6,6 +6,8 @@
 @(the-eval '(require pict-utils/calendar slideshow/pict
                      racket/format))
 
+@title{Calendar picts}
+
 @defproc[(calendar [month (integer-in 1 12)]
                    [year exact-nonnegative-integer?]
                    [#:draw-day draw-day (-> (option/c (integer-in 1 31)) pict?)])
