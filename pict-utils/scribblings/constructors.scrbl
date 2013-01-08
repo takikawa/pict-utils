@@ -32,6 +32,14 @@ Produces a @tech{pict} of a grid with the given dimensions.
   (grid 300 300 50)
 ]}
 
+@defproc[(kool-aid) pict?]{
+
+Produces a drawing of a refreshing drink.
+
+@examples[#:eval the-eval
+(kool-aid)
+]}
+
 @defproc[(arc [width real?] [height real?]
               [start-radians real?] [end-radians real?])
          pict?]{

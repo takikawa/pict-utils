@@ -6,6 +6,7 @@
          racket/class
          racket/contract
          racket/draw
+         racket/math
          (except-in unstable/gui/ppict grid)
          unstable/gui/pict
          (for-syntax racket/base
@@ -16,6 +17,7 @@
 
 (provide
   path
+  kool-aid
   (contract-out [envelope (->* (real? real?)
                                (#:border-width real?
                                 #:color string?
@@ -84,6 +86,53 @@
                    body
                    flap)
                   seal))
+
+;; draws a refreshing drink
+;;
+;; TODO: improve code quality (was made for a Twitter joke)
+(define (kool-aid)
+  (dc (λ (dc dx dy)
+        (define old-pen (send dc get-pen))
+        (define old-brush (send dc get-brush))
+        (send dc set-pen (new pen% [width 2] [color "lightgray"]))
+        (send dc set-brush (new brush% [style 'transparent]))
+        ;; straw
+        (define straw-path (new dc-path%))
+        (send straw-path move-to 49 114)
+        (send straw-path line-to 44 114)
+        (send straw-path line-to 8 3)
+        (send straw-path line-to 13 0)
+        (send straw-path close)
+        (send dc draw-path straw-path dx dy)
+        ;; the glass
+        (send dc set-pen (new pen% [width 3] [color "lightgray"]))
+        (define path (new dc-path%))
+        (send path arc 10 5 50 10 0 pi)
+        (send path line-to 20 115)
+        (send path line-to 50 115)
+        (send path line-to 60 25)
+        (send path close)
+        (send dc draw-path path dx dy)
+        ;; inside
+        (define liquid-path (new dc-path%))
+        (send liquid-path move-to 14 35)
+        (send liquid-path line-to 22 114)
+        (send liquid-path line-to 49 114)
+        (send liquid-path line-to 58 35)
+        (send dc set-pen (new pen% [style 'transparent]))
+        (send dc set-brush (new brush% [color (make-color 250 20 20 0.7)]))
+        (send dc draw-path liquid-path dx dy)
+        ;; bubbles
+        (send dc set-pen (new pen% [width 1] [color (make-color 250 20 20 0.2)]))
+        (send dc set-brush (new brush% [color  (make-color 250 20 20 0.5)]))
+        (send dc draw-ellipse 35 40 5 5)
+        (send dc draw-ellipse 45 45 6 6)
+        (send dc draw-ellipse 40 55 5 5)
+        ;; reset
+        (send dc set-pen old-pen)
+        (send dc set-brush old-brush))
+      61
+      135))
 
 ;; path
 ;; pict macro for drawing paths
