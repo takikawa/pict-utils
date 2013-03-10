@@ -3,7 +3,7 @@
 ;; Library for high-level pict construction
 
 (require slideshow/pict
-         "pict.rkt")
+         unstable/gui/pict)
 
 (provide
  (contract-out
