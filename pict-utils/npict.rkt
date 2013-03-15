@@ -7,7 +7,8 @@
 
 (provide
  (contract-out
-  [npict (->* () #:rest (listof (or/c line? node/c))
+  [npict (->* () (#:background-color string?)
+              #:rest (listof (or/c line? node/c))
               pict?)]
   [align (-> symbol? symbol? align?)]
   (rename make-coord coord
@@ -120,7 +121,8 @@
             (or/c #f string?) (or/c #f style/c)))
 
 ;; listof<Node> -> Pict
-(define (npict . clauses)
+(define (npict #:background-color [background-color #f]
+               . clauses)
   
   ;; sort into nodes, lines, and so on
   (define nodes (filter node? clauses))
@@ -237,8 +239,12 @@
                 (- (+ yp (- y)) (- h dy)))))
   
   ;; then draw on a blank pict of the right size
+  (define background-pict
+    (if background-color
+        (colorize (filled-rectangle w h) background-color)
+        (blank w h)))
   (define initial-pict
-    (for/fold ([p (blank w h)])
+    (for/fold ([p background-pict])
               ([pict-for-node picts] [n nodes])
       (define-values (x y) (draw-coords n pict-for-node))
       (if pict-for-node
