@@ -1,6 +1,7 @@
 Additional tools for building pictures with the `slideshow/pict` library in
 Racket. This library is mostly just for my own use in building diagrams for
-talks and papers.
+talks and papers. Since the library is experimental and grows as I use it,
+I can't guarantee a stable API.
 
 The following libraries are included:
   * `pict-utils/calendar` - draws calendars
