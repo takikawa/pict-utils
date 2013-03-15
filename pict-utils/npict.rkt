@@ -215,10 +215,11 @@
                      (struct-copy line a-line [from from-pict]))]
             [(location/c to)
              (values (make-node #:at to #:pict to-pict)
-                     (struct-copy line a-line [to to-pict]))])))
+                     (struct-copy line a-line [to to-pict]))]
+            [else (values #f a-line)])))
   
   ;; flatten since this could have two-length lists in it too
-  (define line-nodes* (flatten line-nodes))
+  (define line-nodes* (flatten (filter values line-nodes)))
 
   ;; the nodes should now also contain the fake nodes
   (define nodes* (append nodes line-nodes*))
