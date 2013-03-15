@@ -1,9 +1,11 @@
 #lang at-exp racket
 
-(require slideshow/pict
+(require racket/draw
+         slideshow/pict
          "../paragraph.rkt"
-         "../pict.rkt"
-         "../npict.rkt")
+         "../npict.rkt"
+         "../constructors.rkt"
+         unstable/gui/pict)
 
 (define axis-label
   (style #:background-color "white"))

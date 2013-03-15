@@ -146,7 +146,7 @@
     (syntax-parse stx
       [(_ class-name:id (method:id attr:id (arg:id ...)) ...)
        #'(define-syntax-class class-name
-           (pattern ((~literal method) arg ...)
+           (pattern ((~datum method) arg ...)
                     #:with attr #'(λ (p) (send p method arg ...))) ...)]))
 
   (define-path-elem path-elem
