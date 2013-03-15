@@ -24,9 +24,11 @@
                 #:text string?)
                node?))
   (rename make-line line
-          (->* (#:from (or/c node-name/c pict?)
-                #:to (or/c node-name/c pict?))
-               (#:arrow? any/c #:start-angle real? #:end-angle real?
+          (->* ((or/c node-name/c pict?)
+                (or/c node-name/c pict?))
+               (#:from (or/c node-name/c pict?)
+                #:to (or/c node-name/c pict?)
+                #:arrow? any/c #:start-angle real? #:end-angle real?
                 #:start-align align/c #:end-align align/c
                 #:start-pull real? #:end-pull real? #:line-width real?
                 #:color string? #:under? any/c #:solid? any/c
@@ -87,8 +89,12 @@
               line-width color style under?
               solid?))
 
-(define (make-line #:from from
-                   #:to to
+(define (make-line _from _to
+                   ;; these two keyword args are here for
+                   ;; backwards compat and for more flexibility
+                   ;; in argument ordering
+                   #:from [from _from]
+                   #:to [to _to]
                    #:arrow? [arrow? #f]
                    #:start-angle [start-angle #f]
                    #:end-angle [end-angle #f]
