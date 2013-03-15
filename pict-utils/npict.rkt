@@ -24,8 +24,8 @@
                 #:text string?)
                node?))
   (rename make-line line
-          (->* (#:from (or/c node-name/c pict?)
-                #:to (or/c node-name/c pict?))
+          (->* (#:from (or/c location/c node-name/c pict?)
+                #:to (or/c location/c node-name/c pict?))
                (#:arrow? any/c #:start-angle real? #:end-angle real?
                 #:start-align align/c #:end-align align/c
                 #:start-pull real? #:end-pull real? #:line-width real?
@@ -177,16 +177,6 @@
           pict-with-text))
     pict-with-backdrop)
   
-  ;; the picts that we'll draw on the final picture
-  (define picts (map draw-one nodes))
-  
-  ;; mapping of node names to picts
-  (define pict-mapping
-    (for/hash ([n nodes]
-               [p picts]
-               #:when (node-name n))
-      (values (node-name n) p)))
-  
   ;; pict-offsets : pict? pos? -> (values int? int?)
   ;; find the offsets used to draw or size the scene
   (define (pict-offsets p pos)
@@ -202,12 +192,52 @@
       [(lb) (values 0 0)]
       [(cb) (values (/ w 2) 0)]
       [(rb) (values w 0)]))
+
+  ;; define fake nodes for all the coordinates that are
+  ;; used for lines in this npict. these nodes are *only*
+  ;; used for size calculation purposes
+  ;;
+  ;; lines* contains new lines where coords are turned into picts
+  (define-values (line-nodes lines*)
+    (for/lists (new-nodes new-lines)
+               ([a-line lines])
+      (define from (line-from a-line))
+      (define to (line-to a-line))
+      ;; construct dummy picts so lines can be drawn later
+      (define from-pict (blank 1 1))
+      (define to-pict (blank 1 1))
+      (cond [(and (location/c from) (location/c to))
+             (values (list (make-node #:at from #:pict from-pict)
+                           (make-node #:at to #:pict to-pict))
+                     (struct-copy line a-line [from from-pict] [to to-pict]))]
+            [(location/c from)
+             (values (make-node #:at from #:pict from-pict)
+                     (struct-copy line a-line [from from-pict]))]
+            [(location/c to)
+             (values (make-node #:at to #:pict to-pict)
+                     (struct-copy line a-line [to to-pict]))])))
   
+  ;; flatten since this could have two-length lists in it too
+  (define line-nodes* (flatten line-nodes))
+
+  ;; the nodes should now also contain the fake nodes
+  (define nodes* (append nodes line-nodes*))
+
+  ;; the picts that we'll draw on the final picture
+  (define picts (map draw-one nodes*))
+
+  ;; mapping of node names to picts
+  (define pict-mapping
+    (for/hash ([n nodes*] [p picts]
+               #:when (node-name n))
+      (values (node-name n) p)))
+
   ;; first figure out the size of the base pict
   (define-values (xp xn yp yn)
     (for/fold ([x-pos-max 0] [x-neg-max 0]
                [y-pos-max 0] [y-neg-max 0])
-              ([n nodes])
+              ([n nodes*])
+      ;; p is the pict if the given node was drawn
       (define p (draw-one n))
       (define w (pict-width p))
       (define h (pict-height p))
@@ -245,7 +275,7 @@
         (blank w h)))
   (define initial-pict
     (for/fold ([p background-pict])
-              ([pict-for-node picts] [n nodes])
+              ([pict-for-node picts] [n nodes*])
       (define-values (x y) (draw-coords n pict-for-node))
       (if pict-for-node
           (pin-over p x y pict-for-node)
@@ -254,7 +284,7 @@
   ;; then draw the arrows on the image
   (define pict-with-arrows
     (for/fold ([pict initial-pict])
-              ([current-line lines])
+              ([current-line lines*])
       (match-define
         (struct line 
           (from to arrow?

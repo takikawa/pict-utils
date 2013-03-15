@@ -156,3 +156,10 @@
      (node #:at (coord 0 120 'rc) #:pict r #:text "rc")
      (node #:at (coord 60 120 'rt) #:pict r #:text "rt")
      (node #:at (coord 120 120 'rb) #:pict r #:text "rb"))))
+
+;; line size calculation test
+;; The produced picture should look like a + with two lines
+(define line-size-test
+  (npict
+   (line #:from (coord 0 0) #:to (coord 100 0))
+   (line #:from (coord 50 50) #:to (coord 50 -50))))
