@@ -10,7 +10,7 @@
   [npict (->* () (#:background-color string?)
               #:rest (listof (or/c line? node/c))
               pict?)]
-  [align (-> symbol? symbol? align?)]
+  [align (-> node-name/c symbol? align?)]
   (rename make-coord coord
           (->* (real? real?)
                (align/c)
@@ -110,7 +110,7 @@
   (one-of/c 'lt 'ct 'rt 'lc 'cc 'rc 'lb 'cb 'rb))
 
 (define location/c 
-  (or/c node-name/c (struct/c align symbol? symbol?) coord?))
+  (or/c node-name/c (struct/c align node-name/c symbol?) coord?))
 
 (define style/c
   (struct/c style (or/c #f string?) (or/c #f string?) (or/c #f string?)))
@@ -148,7 +148,7 @@
     (define loc (node-loc n))
     (match loc
       [(? node-name/c) (dict-ref name-mapping loc)]
-      [(struct align ((and (? symbol?) name) (and (? symbol?) align)))
+      [(struct align (name align))
        (define c (dict-ref name-mapping name))
        (coord (coord-x c) (coord-y c) align)]
       [else loc]))
