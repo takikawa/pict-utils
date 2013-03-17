@@ -24,8 +24,8 @@
                 #:text string?)
                node?))
   (rename make-line line
-          (->* (#:from (or/c location/c node-name/c pict?)
-                #:to (or/c location/c node-name/c pict?))
+          (->* (#:from (or/c coord? node-name/c pict?)
+                #:to (or/c coord? node-name/c pict?))
                (#:arrow? any/c #:start-angle real? #:end-angle real?
                 #:start-align align/c #:end-align align/c
                 #:start-pull real? #:end-pull real? #:line-width real?
@@ -206,14 +206,14 @@
       ;; construct dummy picts so lines can be drawn later
       (define from-pict (blank 1 1))
       (define to-pict (blank 1 1))
-      (cond [(and (location/c from) (location/c to))
+      (cond [(and (coord? from) (coord? to))
              (values (list (make-node #:at from #:pict from-pict)
                            (make-node #:at to #:pict to-pict))
                      (struct-copy line a-line [from from-pict] [to to-pict]))]
-            [(location/c from)
+            [(coord? from)
              (values (make-node #:at from #:pict from-pict)
                      (struct-copy line a-line [from from-pict]))]
-            [(location/c to)
+            [(coord? to)
              (values (make-node #:at to #:pict to-pict)
                      (struct-copy line a-line [to to-pict]))]
             [else (values #f a-line)])))
