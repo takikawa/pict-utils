@@ -12,7 +12,7 @@
 (define (make-color/hsv hue saturation value)
   (define chroma (* saturation value))
   (define hue* (/ (remainder* hue (* 2 pi)) (/ pi 3)))
-  (define X (* chroma (- 1 (abs (- (remainder (round hue*) 2) 1)))))
+  (define X (* chroma (- 1 (abs (- (remainder* hue* 2) 1)))))
   (define-values (r1 g1 b1)
     (cond [(and (<= 0 hue*) (< hue* 1)) (values chroma X 0)]
           [(and (<= 1 hue*) (< hue* 2)) (values X chroma 0)]
