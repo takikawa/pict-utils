@@ -3,7 +3,7 @@
 @(require "common.rkt")
 
 @(define the-eval (make-base-eval))
-@(the-eval '(require pict-utils/ryb slideshow/pict plot))
+@(the-eval '(require pict-utils/ryb slideshow/pict plot/pict))
 
 @title{RYB Color Model}
 
